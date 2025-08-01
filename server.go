@@ -2,15 +2,12 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"net/url"
 
 	"github.com/breez/breez-lnurl/bolt12"
 	"github.com/breez/breez-lnurl/cache"
-	"github.com/breez/breez-lnurl/channel"
 	"github.com/breez/breez-lnurl/dns"
-	"github.com/breez/breez-lnurl/lnurl"
 	"github.com/breez/breez-lnurl/persist"
 	"github.com/gorilla/mux"
 )
@@ -52,12 +49,15 @@ func initRootHandler(externalURL *url.URL, storage persist.Store, dns dns.DnsSer
 	// The channel that handles the request/response cycle from the node.
 	// This specific channel handles that by invoking the registered webhook to reach the node
 	// providing a callback URL to the node.
-	webhookChannel := channel.NewHttpCallbackChannel(rootRouter, fmt.Sprintf("%v/response", externalURL.String()))
+	// webhookChannel := channel.NewHttpCallbackChannel(rootRouter, fmt.Sprintf("%v/response", externalURL.String()))
 
-	// Routes to handle lnurl pay protocol.
-	lnurl.RegisterLnurlPayRouter(rootRouter, externalURL, storage, dns, cache, webhookChannel)
+	// --- FIX APPLIED HERE ---
+	// By commenting out the line below, the server will no longer handle the old
+	// webhook-based LNURL-Pay requests. This will cause a 404 Not Found,
+	// forcing compatible wallets to fall back to the BOLT12 DNS check.
+	// lnurl.RegisterLnurlPayRouter(rootRouter, externalURL, storage, dns, cache, webhookChannel)
 
-	// Routes to handle BOLT12 Offers.
+	// Routes to handle BOLT12 Offers will remain active.
 	bolt12.RegisterBolt12OfferRouter(rootRouter, externalURL, storage, dns)
 
 	return rootRouter
