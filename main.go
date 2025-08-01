@@ -23,16 +23,30 @@ func main() {
 		log.Fatalf("failed to parse external server URL %v", err)
 	}
 
-	dnsService := dns.NewNoDns()
-	if nameServer := os.Getenv("NAME_SERVER"); nameServer != "" {
+	var dnsService dns.DnsService
+	cfApiToken := os.Getenv("CLOUDFLARE_API_TOKEN")
+	cfZoneId := os.Getenv("CLOUDFLARE_ZONE_ID")
+
+	if cfApiToken != "" && cfZoneId != "" {
+		log.Println("Using Cloudflare DNS service.")
+		domain := externalURL.Host
+		// Handle potential error from the constructor
+		dnsService, err = dns.NewCloudflareDns(cfApiToken, cfZoneId, domain)
+		if err != nil {
+			log.Fatalf("failed to create Cloudflare DNS service: %v", err)
+		}
+	} else if nameServer := os.Getenv("NAME_SERVER"); nameServer != "" {
+		log.Println("Using TSIG-based DNS service.")
 		dnsProtocol := os.Getenv("DNS_PROTOCOL")
 		tsigKey := os.Getenv("TSIG_KEY")
 		tsigSecret := os.Getenv("TSIG_SECRET")
 		if len(tsigKey) == 0 || len(tsigSecret) == 0 {
-			log.Fatalf("TSIG_KEY and TSIG_SECRET must be set when using DNS")
+			log.Fatalf("TSIG_KEY and TSIG_SECRET must be set when using standard DNS")
 		}
-
 		dnsService = dns.NewDns(externalURL, nameServer, dnsProtocol, tsigKey, tsigSecret)
+	} else {
+		log.Println("No DNS service configured.")
+		dnsService = dns.NewNoDns()
 	}
 
 	internalURL, err := parseURLFromEnv("SERVER_INTERNAL_URL", "http://localhost:8080")
