@@ -12,7 +12,6 @@ import (
 )
 
 func main() {
-	// create the storage and start the server
 	storage, err := persist.NewPgStore(os.Getenv("DATABASE_URL"))
 	if err != nil {
 		log.Fatalf("failed to create postgres store: %v", err)
@@ -29,9 +28,12 @@ func main() {
 
 	if cfApiToken != "" && cfZoneId != "" {
 		log.Println("Using Cloudflare DNS service.")
-		domain := externalURL.Host
-		// Handle potential error from the constructor
-		dnsService, err = dns.NewCloudflareDns(cfApiToken, cfZoneId, domain)
+		rootDomain := os.Getenv("ROOT_DOMAIN")
+		if rootDomain == "" {
+			log.Fatalf("ROOT_DOMAIN environment variable must be set when using Cloudflare")
+		}
+
+		dnsService, err = dns.NewCloudflareDns(cfApiToken, cfZoneId, rootDomain)
 		if err != nil {
 			log.Fatalf("failed to create Cloudflare DNS service: %v", err)
 		}

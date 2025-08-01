@@ -8,13 +8,17 @@ import (
 	"github.com/cloudflare/cloudflare-go"
 )
 
+// CloudflareDnsService implements the DnsService interface using the official Go library.
 type CloudflareDnsService struct {
 	api    *cloudflare.API
 	zoneID string
 	domain string
 }
 
-func NewCloudflareDns(apiToken, zoneID, domain string) (DnsService, error) {
+func NewCloudflareDns(apiToken, zoneID, rootDomain string) (DnsService, error) {
+	if rootDomain == "" {
+		return nil, fmt.Errorf("rootDomain cannot be empty")
+	}
 	api, err := cloudflare.NewWithAPIToken(apiToken)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create cloudflare client: %w", err)
@@ -23,7 +27,7 @@ func NewCloudflareDns(apiToken, zoneID, domain string) (DnsService, error) {
 	return &CloudflareDnsService{
 		api:    api,
 		zoneID: zoneID,
-		domain: domain,
+		domain: rootDomain,
 	}, nil
 }
 
@@ -89,7 +93,7 @@ func (c *CloudflareDnsService) Remove(username string) error {
 
 	if len(records) == 0 {
 		log.Printf("No record found for %s, nothing to remove.", recordName)
-		return nil // Success, nothing to do.
+		return nil // Success, as the record doesn't exist.
 	}
 
 	recordID := records[0].ID
