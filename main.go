@@ -33,7 +33,7 @@ func main() {
 			log.Fatalf("ROOT_DOMAIN environment variable must be set when using Cloudflare")
 		}
 
-		dnsService, err = dns.NewCloudflareDns(cfApiToken, cfZoneId, rootDomain)
+		dnsService, err = dns.NewCloudflareDns(cfApiToken, cfZoneId, rootDomain, externalURL)
 		if err != nil {
 			log.Fatalf("failed to create Cloudflare DNS service: %v", err)
 		}

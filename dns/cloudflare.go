@@ -4,18 +4,20 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"net/url"
 
 	"github.com/cloudflare/cloudflare-go"
 )
 
 // CloudflareDnsService implements the DnsService interface using the official Go library.
 type CloudflareDnsService struct {
-	api    *cloudflare.API
-	zoneID string
-	domain string
+	api          *cloudflare.API
+	zoneID       string
+	targetDomain string
 }
 
-func NewCloudflareDns(apiToken, zoneID, rootDomain string) (DnsService, error) {
+// Updated function to accept the externalURL
+func NewCloudflareDns(apiToken, zoneID, rootDomain string, externalURL *url.URL) (DnsService, error) {
 	if rootDomain == "" {
 		return nil, fmt.Errorf("rootDomain cannot be empty")
 	}
@@ -25,15 +27,15 @@ func NewCloudflareDns(apiToken, zoneID, rootDomain string) (DnsService, error) {
 	}
 
 	return &CloudflareDnsService{
-		api:    api,
-		zoneID: zoneID,
-		domain: rootDomain,
+		api:          api,
+		zoneID:       zoneID,
+		targetDomain: externalURL.Hostname(),
 	}, nil
 }
 
 func (c *CloudflareDnsService) Set(username, offer string) (uint32, error) {
 	ctx := context.Background()
-	recordName := fmt.Sprintf("_bip353.%s.%s", username, c.domain)
+	recordName := fmt.Sprintf("_bip353.%s.%s", username, c.targetDomain)
 	log.Printf("Setting Cloudflare DNS TXT record for: %s", recordName)
 
 	rc := cloudflare.ZoneIdentifier(c.zoneID)
@@ -68,7 +70,7 @@ func (c *CloudflareDnsService) Set(username, offer string) (uint32, error) {
 		}
 		_, err := c.api.CreateDNSRecord(ctx, rc, params)
 		if err != nil {
-			return 0, fmt.Errorf("failed to create DNS record for %s: %w", recordName, err)
+			return 0, fmt.Errorf("failed to create DNS record for %s: %w", err)
 		}
 		log.Printf("Successfully created DNS record %s", recordName)
 	}
@@ -78,7 +80,8 @@ func (c *CloudflareDnsService) Set(username, offer string) (uint32, error) {
 
 func (c *CloudflareDnsService) Remove(username string) error {
 	ctx := context.Background()
-	recordName := fmt.Sprintf("_bip353.%s.%s", username, c.domain)
+	// This also uses the correct targetDomain now
+	recordName := fmt.Sprintf("_bip353.%s.%s", username, c.targetDomain)
 	log.Printf("Removing Cloudflare DNS TXT record for: %s", recordName)
 
 	rc := cloudflare.ZoneIdentifier(c.zoneID)
