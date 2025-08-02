@@ -48,12 +48,14 @@ func (c *CloudflareDnsService) Set(username, offer string) (uint32, error) {
 		return 0, fmt.Errorf("failed to list existing DNS records: %w", err)
 	}
 
+	fullContent := fmt.Sprintf("bitcoin:?lno=%s", offer)
 	ttl := 3600
+
 	if len(records) > 0 {
 		recordID := records[0].ID
 		params := cloudflare.UpdateDNSRecordParams{
 			ID:      recordID,
-			Content: offer,
+			Content: fullContent,
 			TTL:     ttl,
 		}
 		_, err := c.api.UpdateDNSRecord(ctx, rc, params)
@@ -65,7 +67,7 @@ func (c *CloudflareDnsService) Set(username, offer string) (uint32, error) {
 		params := cloudflare.CreateDNSRecordParams{
 			Type:    "TXT",
 			Name:    recordName,
-			Content: offer,
+			Content: fullContent,
 			TTL:     ttl,
 		}
 		_, err := c.api.CreateDNSRecord(ctx, rc, params)
