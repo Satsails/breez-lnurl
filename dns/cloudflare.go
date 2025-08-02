@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"net/url"
 
 	"github.com/cloudflare/cloudflare-go"
 )
@@ -16,8 +15,7 @@ type CloudflareDnsService struct {
 	targetDomain string
 }
 
-// Updated function to accept the externalURL
-func NewCloudflareDns(apiToken, zoneID, rootDomain string, externalURL *url.URL) (DnsService, error) {
+func NewCloudflareDns(apiToken, zoneID, rootDomain string) (DnsService, error) {
 	if rootDomain == "" {
 		return nil, fmt.Errorf("rootDomain cannot be empty")
 	}
@@ -29,7 +27,7 @@ func NewCloudflareDns(apiToken, zoneID, rootDomain string, externalURL *url.URL)
 	return &CloudflareDnsService{
 		api:          api,
 		zoneID:       zoneID,
-		targetDomain: externalURL.Hostname(),
+		targetDomain: rootDomain,
 	}, nil
 }
 
