@@ -35,7 +35,7 @@ func NewCloudflareDns(apiToken, zoneID, rootDomain string, externalURL *url.URL)
 
 func (c *CloudflareDnsService) Set(username, offer string) (uint32, error) {
 	ctx := context.Background()
-	recordName := fmt.Sprintf("_bip353.%s.%s", username, c.targetDomain)
+	recordName := fmt.Sprintf("%s.user._bitcoin-payment.%s", username, c.targetDomain)
 	log.Printf("Setting Cloudflare DNS TXT record for: %s", recordName)
 
 	rc := cloudflare.ZoneIdentifier(c.zoneID)
@@ -80,8 +80,7 @@ func (c *CloudflareDnsService) Set(username, offer string) (uint32, error) {
 
 func (c *CloudflareDnsService) Remove(username string) error {
 	ctx := context.Background()
-	// This also uses the correct targetDomain now
-	recordName := fmt.Sprintf("_bip353.%s.%s", username, c.targetDomain)
+	recordName := fmt.Sprintf("%s.user._bitcoin-payment.%s", username, c.targetDomain)
 	log.Printf("Removing Cloudflare DNS TXT record for: %s", recordName)
 
 	rc := cloudflare.ZoneIdentifier(c.zoneID)

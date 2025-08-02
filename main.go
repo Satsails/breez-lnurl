@@ -4,6 +4,7 @@ import (
 	"log"
 	"net/url"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/breez/breez-lnurl/cache"
@@ -66,5 +67,10 @@ func parseURLFromEnv(envKey string, defaultURL string) (*url.URL, error) {
 	if serverURLStr == "" {
 		serverURLStr = defaultURL
 	}
+
+	if !strings.HasPrefix(serverURLStr, "http://") && !strings.HasPrefix(serverURLStr, "https://") {
+		serverURLStr = "https://" + serverURLStr
+	}
+
 	return url.Parse(serverURLStr)
 }
