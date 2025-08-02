@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"net/url"
 
 	"github.com/cloudflare/cloudflare-go"
 )
@@ -15,7 +16,7 @@ type CloudflareDnsService struct {
 	targetDomain string
 }
 
-func NewCloudflareDns(apiToken, zoneID, rootDomain string) (DnsService, error) {
+func NewCloudflareDns(apiToken, zoneID, rootDomain string, externalURL *url.URL) (DnsService, error) {
 	if rootDomain == "" {
 		return nil, fmt.Errorf("rootDomain cannot be empty")
 	}
@@ -27,12 +28,13 @@ func NewCloudflareDns(apiToken, zoneID, rootDomain string) (DnsService, error) {
 	return &CloudflareDnsService{
 		api:          api,
 		zoneID:       zoneID,
-		targetDomain: rootDomain,
+		targetDomain: externalURL.Hostname(),
 	}, nil
 }
 
 func (c *CloudflareDnsService) Set(username, offer string) (uint32, error) {
 	ctx := context.Background()
+	// This now correctly uses the subdomain (e.g., ln.satsails.com) to build the name.
 	recordName := fmt.Sprintf("%s.user._bitcoin-payment.%s", username, c.targetDomain)
 	log.Printf("Setting Cloudflare DNS TXT record for: %s", recordName)
 

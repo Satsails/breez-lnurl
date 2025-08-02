@@ -24,7 +24,6 @@ func main() {
 	}
 
 	var dnsService dns.DnsService
-	// Check for the new BOLT12_ENABLED flag.
 	bolt12Enabled := os.Getenv("BOLT12_ENABLED") == "true"
 
 	if bolt12Enabled {
@@ -38,8 +37,7 @@ func main() {
 				log.Fatalf("ROOT_DOMAIN environment variable must be set when using Cloudflare")
 			}
 
-			// Initialize the Cloudflare DNS service.
-			dnsService, err = dns.NewCloudflareDns(cfApiToken, cfZoneId, rootDomain)
+			dnsService, err = dns.NewCloudflareDns(cfApiToken, cfZoneId, rootDomain, externalURL)
 			if err != nil {
 				log.Fatalf("failed to create Cloudflare DNS service: %v", err)
 			}
